@@ -35,6 +35,7 @@ app.post("/register", async (req, res) => {
         email : email.toLowerCase(),
         password : myEncPassword,
       })
+      
     
       const token = jwt.sign(
         {user_id : user._id,email},
@@ -45,8 +46,8 @@ app.post("/register", async (req, res) => {
     
       )
       user.token = token
-        //update the token or not in the database
-        //TODO: 
+        
+      user.password = undefined
 
 
       res.status(201).json(user)
@@ -55,6 +56,46 @@ app.post("/register", async (req, res) => {
       console.log(error);
     } 
 })
+
+app.post("/login", async (req,res) => {
+
+    try{
+
+        const { email, password } = req.body;
+        console.log(email)
+        console.log(password)
+        if (!(email && password)){
+          res.status(400).send("field is missing")
+        }
+
+
+        const user = await User.findOne({email})
+        if (user && await bcrypt.compare(password, user.password)){
+          
+          const token = jwt.sign(
+                                  {user_id: user._id, email },
+                                  process.env.SECRET_KEY,
+                                  {
+                                    expiresIn: "2h"
+                                  })
+
+          user.token = token
+          user.password = undefined
+          res.status(200).json(user)
+
+
+        }
+        res.status(404).send("your email or password is incorrect");
+
+        
+
+
+    }catch(error){
+      console.log(error);
+    }
+} )
+
+
 
 app.use((req, res) => {
   res.status(404).send('The route you are trying to access does not exist.');
