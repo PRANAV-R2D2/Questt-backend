@@ -38,7 +38,7 @@ router.get('/:bookID', Auth, async (req, res) => {
         user: req.user, 
       });
     } else {
-      res.status(404).send('Book not found');
+      res.status(404).send('Book not found.');
     }
   } catch (error) {
     console.error(error);
