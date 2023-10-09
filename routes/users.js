@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
+const Auth = require('../middleware/auth');  // Import your auth middleware
 
 router.post('/register', async (req, res) => {
   try {
@@ -36,6 +37,8 @@ router.post('/register', async (req, res) => {
     );
 
     user.token = token;
+    await user.save();  // Save the user with the token
+
     user.password = undefined;
 
     return res.status(201).json(user);
@@ -64,6 +67,8 @@ router.post('/login', async (req, res) => {
       );
 
       user.token = token;
+      await user.save();  // Save the user with the token
+
       user.password = undefined;
       return res.status(200).json(user);
     }
@@ -75,8 +80,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.use((req, res) => {
-  return res.status(404).send('The route you are trying to access does not exist.');
+router.post('/logout', Auth, async (req, res) => {
+  try {
+    req.user.token = null;
+    await req.user.save();
+    return res.status(200).send('Logout successful');
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Internal Server Error');
+  }
 });
+
 
 module.exports = router;
