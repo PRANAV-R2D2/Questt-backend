@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get a specific book by ID
-router.get('/:bookID', Auth, async (req, res) => {
+router.get('/:bookID',  async (req, res) => {
   try {
     const book = await Book.findOne({ bookID: req.params.bookID });
     console.log(req);
@@ -47,7 +47,7 @@ router.get('/:bookID', Auth, async (req, res) => {
 });
 
 // Update a book by ID
-router.put('/:bookID', async (req, res) => {
+router.put('/:bookID',Auth, async (req, res) => {
   try {
     const updatedBook = await Book.findOneAndUpdate(
       { bookID: req.params.bookID },
