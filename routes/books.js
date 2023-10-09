@@ -1,248 +1,83 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const Book = require('../models/books');
+const Auth = require('../middleware/auth'); 
 
-// Create a MongoDB connection pool
-const client = new MongoClient('mongodb://127.0.0.1:27017');
-const dbName = 'library';
 
+// Create a new book
+router.post('/', async (req, res) => {
+  try {
+    const newBook = await Book.create(req.body);
+    res.status(201).json(newBook);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Get all books
 router.get('/', async (req, res) => {
-    let isConnected = false;
-   
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      const books = await collection.find().limit(10).toArray();
-  
-      res.json(books);
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Get a specific book by ID
+router.get('/:bookID', Auth, async (req, res) => {
+  try {
+    const book = await Book.findOne({ bookID: req.params.bookID });
+    console.log(req);
+
+    if (book) {
+      res.json({
+        book: book,
+        user: req.user, 
+      });
+    } else {
+      res.status(404).send('Book not found');
     }
-  });
-  
-  router.get('/:bookID', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      const book = await collection.findOne({ bookID: parseInt(req.params.bookID) });
-  
-      if (book) {
-        res.json(book);
-      } else {
-        res.status(404).send('Book not found');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Update a book by ID
+router.put('/:bookID', async (req, res) => {
+  try {
+    const updatedBook = await Book.findOneAndUpdate(
+      { bookID: req.params.bookID },
+      req.body,
+      { new: true }
+    );
+    if (updatedBook) {
+      res.json(updatedBook);
+    } else {
+      res.status(404).send('Book not found');
     }
-  });
-  
-  router.post('/', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      // Validate if bookID is a number and present in the request body
-      if (!req.body.bookID || isNaN(req.body.bookID)) {
-        return res.status(400).send('Invalid or missing bookID');
-      }
-  
-      const newBook = { ...req.body };
-      console.log(newBook);
-      // No need to convert bookID to a string
-      const result = await collection.insertOne(newBook);
-      console.log(result);
-      console.log(result.acknowledged);
-  
-      if (result.acknowledged) {
-        res.status(201).send("book added successfully");  
-      } else {
-        res.status(500).send('Failed to create book');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Delete a book by ID
+router.delete('/:bookID', async (req, res) => {
+  try {
+    const result = await Book.deleteOne({ bookID: req.params.bookID });
+    if (result.deletedCount === 1) {
+      res.status(200).send('Book deleted successfully');
+    } else {
+      res.status(404).send('Book not found');
     }
-  });
-  
-  router.put('/:bookID', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      // Validate if bookID is a number and present in the request body
-      if (!req.body.bookID || isNaN(req.body.bookID)) {
-        return res.status(400).send('Invalid or missing bookID');
-      }
-  
-      const updatedBook = { ...req.body };
-      const result = await collection.updateOne({ bookID: parseInt(req.params.bookID) }, { $set: updatedBook });
-  
-      if (result.acknowledged) {
-        res.status(200).send("Book updated successfully");
-      } else {
-        res.status(500).send('Failed to update book');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
-    }
-  });
-  router.delete('/:bookID', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      const result = await collection.deleteOne({ bookID: parseInt(req.params.bookID) });
-  
-      if (result.acknowledged) {
-        res.status(200).send("Book deleted successfully");
-      } else {
-        res.status(500).send('Failed to delete book');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
-    }
-  });
-  
-  router.get('/search/title/:title', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      // Use a regular expression for case-insensitive matching
-      const books = await collection.find({ title: new RegExp(req.params.title, 'i') }).toArray();
-  
-      if (books.length > 0) {
-        res.json(books);
-      } else {
-        res.status(404).send('No books found with the given title');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
-    }
-  });
-  
-  router.get('/search/author/:author', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      // Use a regular expression for case-insensitive matching
-      const books = await collection.find({ authors: new RegExp(req.params.author, 'i') }).toArray();
-  
-      if (books.length > 0) {
-        res.json(books);
-      } else {
-        res.status(404).send('No books found with the given author');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
-    }
-  });
-  
-  router.get('/search/publisher/:publisher', async (req, res) => {
-    let isConnected = false;
-  
-    try {
-      await client.connect();
-      isConnected = true;
-  
-      const db = client.db(dbName);
-      const collection = db.collection('books');
-  
-      // Use a regular expression for case-insensitive matching
-      const books = await collection.find({ publisher: new RegExp(req.params.publisher, 'i') }).toArray();
-  
-      if (books.length > 0) {
-        res.json(books);
-      } else {
-        res.status(404).send('No books found with the given publisher');
-      }
-    } catch (error) {
-      console.error('Error occurred:', error);
-      res.status(500).send('Internal Server Error');
-    } finally {
-      if (isConnected) {
-        await client.close();
-        console.log('MongoDB connection closed.');
-      }
-    }
-  });
-  
-  
-  module.exports = router;
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+module.exports = router;
