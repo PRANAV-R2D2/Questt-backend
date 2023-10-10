@@ -6,17 +6,18 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const booksRouter = require('./routes/books');
 const usersRouter = require('./routes/users');
-
+const ordersRouter = require('./routes/orders'); 
 
 const app = express();
 require("./config/database").connect(); 
 
 app.use(cors());
 app.use(morgan('combined'));
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.use('/api/books', booksRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/orders', ordersRouter);
 
 app.get("/",(req,res) => {
   console.log("heyy")

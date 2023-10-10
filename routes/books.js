@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Book = require('../models/books');
-const Auth = require('../middleware/auth'); 
+// const Auth = require('../middleware/auth'); 
 
 
 // Create a new book
@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
 // Get all books
 router.get('/', async (req, res) => {
   try {
-    const books = await Book.find();
+    const books = await Book.find().limit(5);
     res.json(books);
   } catch (error) {
     console.error(error);
@@ -30,12 +30,11 @@ router.get('/', async (req, res) => {
 router.get('/:bookID',  async (req, res) => {
   try {
     const book = await Book.findOne({ bookID: req.params.bookID });
-    console.log(req);
-
+    console.log(book);
+    console.log(req.params.bookID);
     if (book) {
       res.json({
-        book: book,
-        user: req.user, 
+        book: book 
       });
     } else {
       res.status(404).send('Book not found.');
@@ -47,7 +46,7 @@ router.get('/:bookID',  async (req, res) => {
 });
 
 // Update a book by ID
-router.put('/:bookID',Auth, async (req, res) => {
+router.put('/:bookID'  , async (req, res) => {
   try {
     const updatedBook = await Book.findOneAndUpdate(
       { bookID: req.params.bookID },
@@ -79,5 +78,53 @@ router.delete('/:bookID', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+// Search Books by Title
+router.get('/search/title/:title', async (req, res) => {
+  try {
+    const books = await Book.find({ title: new RegExp(req.params.title, 'i') }).limit(3);
+    if (books.length > 0) {
+      console.log(books);
+      res.json(books);
+
+    } else {
+      res.status(404).send('No books found with the given title');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Search Books by Author
+router.get('/search/authors/:authors', async (req, res) => {
+  try {
+    const books = await Book.find({ authors: new RegExp(req.params.author, 'i') });
+    if (books.length > 0) {
+      res.json(books);
+    } else {
+      res.status(404).send('No books found with the given author');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Search Books by Publisher
+router.get('/search/publisher/:publisher', async (req, res) => {
+  try {
+    const books = await Book.find({ publisher: new RegExp(req.params.publisher, 'i') });
+    if (books.length > 0) {
+      res.json(books);
+    } else {
+      res.status(404).send('No books found with the given publisher');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 
 module.exports = router;
