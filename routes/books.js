@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
 // Get all books
 router.get('/', async (req, res) => {
   try {
-    const books = await Book.find().limit(5);
+    const books = await Book.find().limit(21);
     res.json(books);
   } catch (error) {
     console.error(error);
@@ -81,7 +81,7 @@ router.delete('/:bookID', async (req, res) => {
 // Search Books by Title
 router.get('/search/title/:title', async (req, res) => {
   try {
-    const books = await Book.find({ title: new RegExp(req.params.title, 'i') }).limit(3);
+    const books = await Book.find({ title: new RegExp(req.params.title, 'i') }).limit(20);
     if (books.length > 0) {
       console.log(books);
       res.json(books);
@@ -98,7 +98,7 @@ router.get('/search/title/:title', async (req, res) => {
 // Search Books by Author
 router.get('/search/authors/:authors', async (req, res) => {
   try {
-    const books = await Book.find({ authors: new RegExp(req.params.author, 'i') });
+    const books = await Book.find({ authors: new RegExp(req.params.author, 'i') }).limit(20);
     if (books.length > 0) {
       res.json(books);
     } else {
@@ -113,7 +113,7 @@ router.get('/search/authors/:authors', async (req, res) => {
 // Search Books by Publisher
 router.get('/search/publisher/:publisher', async (req, res) => {
   try {
-    const books = await Book.find({ publisher: new RegExp(req.params.publisher, 'i') });
+    const books = await Book.find({ publisher: new RegExp(req.params.publisher, 'i') }).limit(20);
     if (books.length > 0) {
       res.json(books);
     } else {
