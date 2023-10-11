@@ -1,5 +1,7 @@
+// Import the mongoose module
 const mongoose = require('mongoose');
 
+// Define the schema for a book
 const bookSchema = new mongoose.Schema({
   bookID: {
     type: Number,
@@ -52,4 +54,5 @@ const bookSchema = new mongoose.Schema({
   },
 });
 
+// Export the Book model
 module.exports = mongoose.model('Book', bookSchema);

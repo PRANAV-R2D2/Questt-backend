@@ -1,12 +1,12 @@
+// Import the required modules
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/orders');
 const Auth = require('../middleware/auth');
 
-// POST /api/orders
+// Route to create a new order
 router.post('/', Auth, async (req, res) => {
   try {
-    console.log(req.body);
     const { books } = req.body;
 
     if (!Array.isArray(books) || books.length === 0) {
@@ -14,12 +14,11 @@ router.post('/', Auth, async (req, res) => {
     }
 
     const newOrder = new Order({
-      user: req.user, // Store user data as an object
-      books: books,   // Store book data as an array of objects
+      user: req.user,
+      books: books,
     });
 
     const savedOrder = await newOrder.save();
-    console.log(savedOrder);
     res.json(savedOrder);
    
   } catch (error) {
@@ -28,12 +27,10 @@ router.post('/', Auth, async (req, res) => {
   }
 });
 
-// GET /api/orders
+// Route to get all orders
 router.get('/', Auth, async (req, res) => {
   try {
-    // Fetch orders for the authenticated user
     const orders = await Order.find({ 'user.user_id': req.user.user_id }).populate('books');
-
     res.json(orders);
   } catch (error) {
     console.error(error);
@@ -41,4 +38,5 @@ router.get('/', Auth, async (req, res) => {
   }
 });
 
+// Export the router module
 module.exports = router;

@@ -1,10 +1,12 @@
+// Import the required modules
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/users');
-const Auth = require('../middleware/auth');  // Import your auth middleware
+const Auth = require('../middleware/auth');
 
+// Route to register a new user
 router.post('/register', async (req, res) => {
   try {
     const { firstname, lastname, email, password } = req.body;
@@ -37,7 +39,7 @@ router.post('/register', async (req, res) => {
     );
 
     user.token = token;
-    await user.save();  // Save the user with the token
+    await user.save();
 
     user.password = undefined;
 
@@ -48,6 +50,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Route to login a user
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -67,7 +70,7 @@ router.post('/login', async (req, res) => {
       );
 
       user.token = token;
-      await user.save();  // Save the user with the token
+      await user.save();
 
       user.password = undefined;
       return res.status(200).json(user);
@@ -80,6 +83,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Route to logout a user
 router.post('/logout', Auth, async (req, res) => {
   try {
     req.user.token = null;
@@ -91,5 +95,5 @@ router.post('/logout', Auth, async (req, res) => {
   }
 });
 
-
+// Export the router module
 module.exports = router;

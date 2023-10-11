@@ -1,5 +1,7 @@
+// Import the mongoose module
 const mongoose = require('mongoose');
 
+// Define the schema for an order
 const orderSchema = new mongoose.Schema({
   user: {
     type: Object, // Store user data as an object
@@ -13,4 +15,5 @@ const orderSchema = new mongoose.Schema({
   ],
 });
 
+// Export the Order model
 module.exports = mongoose.model('Order', orderSchema);
